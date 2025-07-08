@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quick Search Tool</title>
+  <style>
+    :root {
+      --ph-gold: #FDB913;
+      --ph-charcoal: #1C2B39;
+      --ph-white: #FFFFFF;
+      --ph-border-gray: #4a4a4a;
+      --subtitle-inline-color: #888888;
+      --subtitle-inline-size: 0.65rem;
+      --subtitle-inline-weight: 400;
+      --subtitle-inline-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --subtitle-inline-vertical-align: 2px;
+
+      --card-width: 480px;
+      --card-height: 620px;
+      --card-padding-vertical: 40px;
+      --card-padding-horizontal: 40px;
+      --card-spacing-x: 420px;
+      --card-spacing-y: 40px;
+      --card-scale-center: 1;
+      --card-scale-side: 0.85;
+      --card-rotate-y-side: 20deg;
+      --card-rotate-x-side: 10deg;
+      --card-translate-z-side: -300px;
+      --back-card-shadow: rgba(0, 0, 0, 0.6);
+      --back-card-opacity: 0.7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--ph-gold);
+      color: var(--ph-charcoal);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ====== Dropdown container fixed top-left ====== */
+    nav.quick-links-nav {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 16px;
+      z-index: 1000;
+      font-size: 0.9rem;
+      user-select: none;
+      font-weight: 600;
+    }
+
+    nav.quick-links-nav > div {
+      position: relative;
+    }
+
+nav.quick-links-nav > div > button {
+  background: transparent;
+  border: none;
+  color: var(--ph-charcoal);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;          /* smaller font */
+  padding: 8px 6px !important; /* smaller padding, forced */
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  line-height: 1.2;            /* tighter line height */
+  min-width: auto;             /* allow smaller width */
+  height: auto;                /* allow smaller height */
+  white-space: nowrap;         /* prevent wrapping */
+}
+
+    nav.quick-links-nav > div > button:hover,
+    nav.quick-links-nav > div > button:focus {
+      background-color: rgba(28, 43, 57, 0.1);
+      outline: none;
+    }
+
+nav.quick-links-nav ul.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin: 6px 0 0 0;
+  padding: 6px 0; /* reduced padding */
+  background-color: var(--ph-white);
+  border-radius: 6px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  list-style: none;
+  min-width: 180px; /* reduced width */
+  max-height: 500px;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+  z-index: 1000;
+  font-size: 0.85rem; /* smaller font */
+}
+
+nav.quick-links-nav ul.dropdown-menu li a {
+  display: block;
+  padding: 6px 12px; /* reduced padding */
+  text-decoration: none;
+  color: black;
+  font-weight: 400;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+    nav.quick-links-nav ul.dropdown-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    nav.quick-links-nav ul.dropdown-menu li {
+      padding: 0;
+      margin: 0;
+    }
+
+    nav.quick-links-nav ul.dropdown-menu li a {
+      display: block;
+      padding: 8px 16px;
+      text-decoration: none;
+      color: black;
+      font-weight: 400;
+      transition: background-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    nav.quick-links-nav ul.dropdown-menu li a:hover,
+    nav.quick-links-nav ul.dropdown-menu li a:focus {
+      background-color: var(--ph-gold);
+      color: var(--ph-charcoal);
+      outline: none;
+    }
+
+    /* Cards container and cards styling unchanged */
+    .card-wrapper {
+      position: relative;
+      width: calc(var(--card-width) + var(--card-spacing-x) * 2);
+      max-width: 100%;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: var(--card-height);
+      perspective: 1500px;
+    }
+
+    .arrow-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 64px;
+      height: 64px;
+      cursor: pointer;
+      font-size: 4.5rem;
+      line-height: 1;
+      color: rgba(28, 43, 57, 0.3);
+      transition: color 0.3s ease;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline-offset: 3px;
+      z-index: 20;
+      border: none;
+      background: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .arrow-btn:hover,
+    .arrow-btn:focus {
+      color: rgba(28, 43, 57, 0.6);
+      outline: none;
+    }
+
+    .arrow-btn:active {
+      color: rgba(28, 43, 57, 0.9);
+    }
+
+    .arrow-left {
+      left: -90px;
+    }
+
+    .arrow-right {
+      right: -90px;
+    }
+
+    .cards-container {
+      position: relative;
+      width: 100%;
+      height: var(--card-height);
+      overflow: visible;
+      flex-shrink: 0;
+      user-select: none;
+      transform-style: preserve-3d;
+    }
+
+    main.card {
+      background-color: var(--ph-white);
+      border-radius: 8px;
+      box-shadow: 0 0 20px 4px rgba(0, 0, 0, 0.85);
+      width: var(--card-width);
+      height: var(--card-height);
+      padding: var(--card-padding-vertical) var(--card-padding-horizontal);
+      text-align: center;
+      user-select: none;
+      box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      transition:
+        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.6s ease,
+        box-shadow 0.6s ease,
+        filter 0.6s ease;
+      opacity: 0;
+      pointer-events: none;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(28,43,57,0.3) transparent;
+      filter: none;
+      cursor: default;
+    }
+
+    main.card:hover.back-card {
+      cursor: pointer;
+    }
+
+    main.card::-webkit-scrollbar {
+      width: 8px;
+    }
+    main.card::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    main.card::-webkit-scrollbar-thumb {
+      background-color: rgba(28,43,57,0.3);
+      border-radius: 4px;
+    }
+
+    main.card.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 10;
+      box-shadow: 0 0 30px 6px rgba(0, 0, 0, 0.9);
+      filter: brightness(1);
+      cursor: default;
+    }
+
+    main.card.back-card {
+      box-shadow: 0 35px 120px 30px var(--back-card-shadow);
+      opacity: var(--back-card-opacity);
+      filter: brightness(0.6);
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 5;
+    }
+
+    main.card.blank {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      font-size: 1rem;
+      color: var(--ph-charcoal);
+      user-select: none;
+      padding: var(--card-padding-vertical) var(--card-padding-horizontal);
+      text-align: left;
+      overflow-y: auto;
+      height: var(--card-height);
+    }
+
+    main.card h2 {
+      font-weight: 700;
+      font-size: 1.9rem;
+      color: var(--ph-charcoal);
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+      user-select: none;
+      text-align: center;
+    }
+
+    main.card .subtitle {
+      font-weight: 400;
+      font-size: 0.9rem;
+      color: var(--ph-charcoal);
+      margin-top: 0;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      font-style: normal;
+      user-select: none;
+      text-align: center;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      color: var(--ph-charcoal);
+      text-align: left;
+      gap: 6px;
+    }
+
+    main.card#card2 label,
+    main.card#card3 label {
+      margin-bottom: 2px;
+    }
+
+    .subtitle-inline {
+      font-family: var(--subtitle-inline-font);
+      font-size: var(--subtitle-inline-size);
+      font-weight: var(--subtitle-inline-weight);
+      color: var(--subtitle-inline-color);
+      font-style: normal;
+      user-select: none;
+      position: relative;
+      top: var(--subtitle-inline-vertical-align);
+    }
+
+    /* Fix asterisk color back to red */
+    label > span.required,
+    label > span[style*="color:#cc0000"] {
+      color: #cc0000 !important;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border: 1.5px solid var(--ph-border-gray);
+      border-radius: 4px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      font-family: inherit;
+      color: var(--ph-charcoal);
+      background-color: var(--ph-white);
+    }
+
+    input[type="text"]::placeholder,
+    select::placeholder {
+      text-transform: none;
+      color: #666;
+      font-style: italic;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--ph-charcoal);
+      outline: none;
+      box-shadow: 0 0 6px rgba(29, 29, 27, 0.5);
+      background-color: var(--ph-white);
+    }
+
+    select option {
+      white-space: normal;
+      word-wrap: break-word;
+      text-transform: none;
+    }
+
+    .error {
+      color: #cc0000;
+      margin-top: 12px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-height: 1.2em;
+      text-align: center;
+    }
+
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 0;
+    }
+
+    /* PCS buttons container to match spacing */
+    .pcs-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 0;
+      width: 100%;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    button {
+      background-color: var(--ph-gold);
+      color: var(--ph-charcoal);
+      border: none;
+      border-radius: 20px;
+      padding: 14px 0;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      width: 180px;
+      height: 48px;
+      font-family: inherit;
+      text-transform: none;
+      letter-spacing: 0.03em;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    button:hover,
+    button:focus {
+      background-color: #e6b800;
+      outline: none;
+      box-shadow: 0 6px 14px rgba(230, 184, 0, 0.8);
+    }
+
+    button:active {
+      background-color: #b38f00;
+      box-shadow: none;
+    }
+
+    button.clear-btn {
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    form > label {
+      margin-top: 18px;
+    }
+
+    .disclaimer {
+      margin-top: 30px;
+      font-size: 0.75rem;
+      color: var(--ph-charcoal);
+      text-align: center;
+      font-style: normal;
+      font-weight: 400;
+      user-select: none;
+      max-width: var(--card-width);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Card 2 and 3 styling to match Card 1 */
+    main.card#card2,
+    main.card#card3 {
+      justify-content: flex-start;
+      align-items: flex-start;
+      overflow-y: auto;
+      padding-top: var(--card-padding-vertical);
+      padding-bottom: var(--card-padding-vertical);
+      text-align: left;
+    }
+
+    main.card#card2 h2,
+    main.card#card3 h2 {
+      text-align: center;
+    }
+
+    main.card#card2 .subtitle,
+    main.card#card3 .subtitle {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    main.card#card2 .pcs-form,
+    main.card#card3 .pcs-form {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin: 0 auto;
+    }
+
+    main.card#card3 .error {
+      color: #cc0000;
+      margin-top: 12px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-height: 1.2em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Quick Links Dropdown Nav -->
+  <nav class="quick-links-nav" aria-label="Quick Links Navigation">
+<div>
+  <button aria-haspopup="true" aria-expanded="false" aria-controls="standards-menu" id="btn-standards">Catalogs</button>
+  <ul class="dropdown-menu" id="standards-menu" role="menu" aria-labelledby="btn-standards">
+    <li><a href="https://discover.parker.com/Cylinder-Central-Catalogs" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Cylinder Catalogs Homepage</a></li>
+    <li><a href="https://www.parker.com/content/dam/Parker-com/Literature/O-Ring-Division-Literature/ORD-5700.pdf" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Parker O-ring Handbook</a></li>
+    <li><a href="https://www.parker.com/content/dam/Parker-com/Literature/Tube-Fittings-Division/4300_Catalog_Cover.pdf" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Parker Tube Fittings Handbook</a></li>
+  </ul>
+</div>
+
+<div>
+  <button aria-haspopup="true" aria-expanded="false" aria-controls="master-parts-lists-menu" id="btn-master-parts-lists">Master Part Lists</button>
+  <ul class="dropdown-menu" id="master-parts-lists-menu" role="menu" aria-labelledby="btn-master-parts-lists">
+    <li><a href="https://indplm/enovia/common/emxNavigator.jsp?targetLocation=content&amp;objectId=32357.64927.36984.30295&amp;emxSuiteDirectory=teamcentral" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Enovia MPL Home Page</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=Change%20Controlled%20Document&amp;name=CYL-MPL-2H-GENII&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2H Gen II</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=Change%20Controlled%20Document&amp;name=CYL-MPL-2HD-GENII&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2HD Gen II</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=Change%20Controlled%20Document&amp;name=CYL-MPL-3H-GENII&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">3H Gen II</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=CAD%20Drawing&amp;name=SKC158447&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2A</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=Change%20Controlled%20Document&amp;name=CYL-MPL-2AP&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2AP</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=CAD%20Drawing&amp;name=SKC158448&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">3L</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=CAD%20Drawing&amp;name=1338970000&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">HMI</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=CAD%20Drawing&amp;name=0981240000&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2HX With LDT</a></li>
+    <li><a href="http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp?type=CAD%20Drawing&amp;name=0984340000&amp;rev=%40" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2HX With Wavescale</a></li>
+  </ul>
+</div>
+
+<div>
+  <button aria-haspopup="true" aria-expanded="false" aria-controls="sharepoints-menu" id="btn-sharepoints">SharePoints</button>
+  <ul class="dropdown-menu" id="sharepoints-menu" role="menu" aria-labelledby="btn-sharepoints">
+    <li><a href="https://parkercorp.sharepoint.com/sites/CADProductEngineering" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Engineering SharePoint</a></li>
+    <li><a href="https://parkercorp.sharepoint.com/sites/CADProductEngineering/Lists/Engineering%20Error%20Tracking/AllItems.aspx?viewpath=%2Fsites%2FCADProductEngineering%2FLists%2FEngineering%20Error%20Tracking%2FAllItems%2Easpx" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Engineering Errors SharePoint</a></li>
+    <li><a href="http://polteams/sites/hyd/CYL/QVS/Lists/Tasks/AllItems.aspx" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Marketing SharePoint</a></li>
+    <li><a href="https://parkercorp.sharepoint.com/sites/CYLDivisionQuotes/Lists/Quote_Form/AllItems.aspx" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Quoting SharePoint</a></li>
+    <li><a href="http://polteams/sites/hyd/CYL/ENG/Lists/Cylinder%20to%20POEC%20Project%20Tracking/AllItems.aspx" target="_blank" rel="noopener" role="menuitem" tabindex="-1">POEC SharePoint</a></li>
+  </ul>
+</div>
+
+  <div>
+    <button aria-haspopup="true" aria-expanded="false" aria-controls="pcs-menu" id="btn-pcs">PCS</button>
+    <ul class="dropdown-menu" id="pcs-menu" role="menu" aria-labelledby="btn-pcs">
+      <li><a href="https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/StackIT/UserConfigurePart" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS</a></li>
+      <li><a href="http://cyl01ad02:9090/Industrial%20Cylinder/StackIT/UserConfigurePart" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS 9090</a></li>
+      <li><a href="http://cyl01ad02:9494/Industrial%20Cylinder/StackIT/EstimationParts" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS 9494</a></li>
+    </ul>
+  </div>
+
+  <div>
+    <button aria-haspopup="true" aria-expanded="false" aria-controls="planning-guides-menu" id="btn-planning-guides">Planning Guides</button>
+    <ul class="dropdown-menu" id="planning-guides-menu" role="menu" aria-labelledby="btn-planning-guides">
+      <li><a href="http://polteams/sites/hyd/CYL/COLWiki/SitePages/2H%20GenII%20Planning%20Guide.aspx" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Gen II 2H Planning Guide</a></li>
+      <li><a href="http://cyl01aw01/CYL/2HX_Book.htm" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2HX Planning Guide</a></li>
+      <li><a href="http://polteams/sites/hyd/CYL/COLWiki/SiteAssets/SitePages/2A%20Information/2A3L.pdf" target="_blank" rel="noopener" role="menuitem" tabindex="-1">2A Planning Guide</a></li>
+    </ul>
+  </div>
+
+<div>
+  <button aria-haspopup="true" aria-expanded="false" aria-controls="other-menu" id="btn-other">Other</button>
+  <ul class="dropdown-menu" id="other-menu" role="menu" aria-labelledby="btn-other">
+    <li><a href="http://cylengineering/Home/Index" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Orders Log</a></li>
+    <li><a href="http://cylengineering/dashboard/" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Engineering Dashboard</a></li>
+    <li><a href="https://parkercorp.sharepoint.com/sites/CADProductEngineering/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FCADProductEngineering%2FShared%20Documents%2FETO%20ADMIN%2F01-Approval%20DWGs%20to%20Send&amp;viewid=019de285-a611-4f86-8a13-e5804c2058d5" target="_blank" rel="noopener" role="menuitem" tabindex="-1">Hema's Folder</a></li>
+  </ul>
+</div>
+</nav>
+
+  <!-- Main Cards -->
+  <div class="card-wrapper" aria-live="polite" aria-atomic="true">
+    <button class="arrow-btn arrow-left" aria-label="Previous Card" tabindex="0" aria-controls="card1 card2 card3" aria-keyshortcuts="ArrowLeft">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" >
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <div class="cards-container" id="cards-container" aria-live="polite">
+<!-- Card 1 -->
+<main id="card1" class="card active" role="region" aria-labelledby="card1-title" tabindex="0" aria-hidden="false">
+  <h2 id="card1-title">Enovia Quick Search</h2>
+  <h4 class="subtitle">Search Enovia for an exact file name of a document. <br>🗲 <em>Quick as Lightning</em> 🗲</h4>
+
+  <form id="searchForm" novalidate>
+    <label for="partNumber">
+      Part Number <span style="color:#cc0000">*</span>
+    </label>
+    <input type="text" id="partNumber" name="Part_number" required autocomplete="off" placeholder="Enter part number" />
+
+    <label for="revision">
+      Revision
+      <span class="subtitle-inline">(Only for Quick Search)</span>
+    </label>
+    <input type="text" id="revision" name="Revision" placeholder="Latest Revision if Blank" autocomplete="off" />
+
+    <div id="errorMsg" class="error" role="alert" aria-live="assertive"></div>
+
+    <div class="buttons-container">
+      <button type="submit" id="quickSearchBtn">Quick Search</button>
+      <button type="button" id="fullDocBtn">Full Doc Search 🡵</button>
+      <button type="button" class="clear-btn" id="clearBtn">Clear All Fields</button>
+    </div>
+  </form>
+
+  <p class="disclaimer"><span style="color:#cc0000">*</span> Required field</p>
+</main>
+
+      <!-- Card 2 -->
+      <main id="card2" class="card" role="region" aria-labelledby="card2-title" tabindex="0" aria-hidden="true">
+        <h2 id="card2-title">PCS Quick Search</h2>
+        <h4 class="subtitle">Search PCS for a CPN. <br>🗲 <em>Quick as Lightning</em> 🗲</h4>
+        <form class="pcs-form" id="pcsForm" novalidate>
+          <label for="cpnInput" style="margin-bottom: 2px;">
+            Cylinder Part Number <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="cpnInput"
+            name="cpn"
+            class="pcs-input"
+            placeholder="CPN"
+            autocomplete="off"
+            aria-label="Cylinder Part Number"
+            required
+          />
+          <div id="pcsError" class="pcs-error error" aria-live="assertive"></div>
+          <div class="pcs-buttons">
+  <button type="submit" id="pcsEnterBtn">Search PCS</button>
+  <button type="button" id="internalSummaryBtn">Internal Summary</button>
+  <button type="button" id="pcsClearBtn">Clear All Fields</button>
+</div>
+        </form>
+        <p class="disclaimer"><span style="color:#cc0000">*</span> Required field</p>
+      </main>
+
+      <!-- Card 3: Orders Log Quick Search -->
+      <main id="card3" class="card" role="region" aria-labelledby="card3-title" tabindex="0" aria-hidden="true">
+        <h2 id="card3-title">Orders Log Quick Search</h2>
+        <h4 class="subtitle">Search the Orders Log for a CPN.<br>🗲 <em>Quick as Lightning</em> 🗲</h4>
+        <form id="ordersLogForm" class="pcs-form" novalidate>
+          <label for="ordersSearchInput" style="margin-bottom: 2px;">
+            Search Term <span style="color:#cc0000">*</span>
+          </label>
+          <input
+            type="text"
+            id="ordersSearchInput"
+            name="ordersSearchInput"
+            class="pcs-input"
+            placeholder="Enter Part Number"
+            autocomplete="off"
+            aria-label="Orders Log Search"
+            required
+          />
+          <div id="ordersError" class="error" aria-live="assertive"></div>
+          <div class="pcs-buttons">
+            <button type="submit" id="ordersSearchBtn">Search</button>
+            <button type="button" id="ordersClearBtn">Clear All Fields</button>
+          </div>
+        </form>
+        <p class="disclaimer"><span style="color:#cc0000">*</span> Required field</p>
+      </main>
+    </div>
+    <button class="arrow-btn arrow-right" aria-label="Next Card" tabindex="0" aria-controls="card1 card2 card3" aria-keyshortcuts="ArrowRight">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+  </div>
+
+  <script>
+    (() => {
+      // Dropdown toggle logic (click only, no hover)
+      const dropdownButtons = document.querySelectorAll('nav.quick-links-nav > div > button');
+
+      function closeAllDropdowns() {
+        dropdownButtons.forEach(btn => {
+          btn.setAttribute('aria-expanded', 'false');
+          const menu = document.getElementById(btn.getAttribute('aria-controls'));
+          if (menu) menu.classList.remove('show');
+        });
+      }
+
+      dropdownButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const expanded = button.getAttribute('aria-expanded') === 'true';
+          closeAllDropdowns();
+          if (!expanded) {
+            button.setAttribute('aria-expanded', 'true');
+            const menu = document.getElementById(button.getAttribute('aria-controls'));
+            if (menu) menu.classList.add('show');
+          }
+        });
+      });
+
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', () => {
+        closeAllDropdowns();
+      });
+
+      // Cards logic (unchanged from your original)
+      const cards = [
+        document.getElementById('card1'),
+        document.getElementById('card2'),
+        document.getElementById('card3'),
+      ];
+
+      const leftBtn = document.querySelector('.arrow-left');
+      const rightBtn = document.querySelector('.arrow-right');
+
+      let currentIndex = 0;
+      let isAnimating = false;
+
+      function setCardInteractive(card, isActive) {
+        const interactiveElements = card.querySelectorAll('input, select, textarea, button, a, [tabindex]');
+        interactiveElements.forEach(el => {
+          if (isActive) {
+            el.disabled = false;
+            if (el.getAttribute('data-prev-tabindex') !== null) {
+              el.tabIndex = el.getAttribute('data-prev-tabindex');
+            } else {
+              el.tabIndex = 0;
+            }
+          } else {
+            if (el.getAttribute('data-prev-tabindex') === null) {
+              el.setAttribute('data-prev-tabindex', el.tabIndex);
+            }
+            el.disabled = true;
+            el.tabIndex = -1;
+          }
+        });
+      }
+
+      function updateCardsPositions() {
+        cards.forEach((card, i) => {
+          card.classList.remove('active', 'back-card');
+          card.style.pointerEvents = 'none';
+          card.setAttribute('aria-hidden', 'true');
+          card.style.zIndex = '1';
+
+          // Position cards offscreen by default
+          card.style.transform = 'translateX(-50%) translateY(0) translateZ(-600px) scale(0.7)';
+          card.style.opacity = '0';
+          card.style.boxShadow = 'none';
+          card.style.filter = 'brightness(0.5)';
+          card.style.cursor = 'default';
+
+          setCardInteractive(card, false);
+        });
+
+        const total = cards.length;
+        const centerCard = cards[currentIndex];
+        const leftIndex = (currentIndex - 1 + total) % total;
+        const rightIndex = (currentIndex + 1) % total;
+
+        // Center card
+        centerCard.classList.add('active');
+        centerCard.style.opacity = '1';
+        centerCard.style.pointerEvents = 'auto';
+        centerCard.setAttribute('aria-hidden', 'false');
+        centerCard.style.zIndex = '30';
+        centerCard.style.transform = 'translateX(-50%) translateY(0) translateZ(0) rotateY(0deg) rotateX(0deg) scale(1)';
+        centerCard.style.boxShadow = '0 0 30px 6px rgba(0, 0, 0, 0.9)';
+        centerCard.style.filter = 'brightness(1)';
+        centerCard.style.cursor = 'default';
+        setCardInteractive(centerCard, true);
+
+        // Left card
+        const leftCard = cards[leftIndex];
+        leftCard.classList.add('back-card');
+        leftCard.style.opacity = '0.7';
+        leftCard.style.zIndex = '20';
+        leftCard.style.transform = `translateX(calc(-50% - var(--card-spacing-x))) translateY(var(--card-spacing-y)) translateZ(var(--card-translate-z-side)) rotateY(var(--card-rotate-y-side)) rotateX(var(--card-rotate-x-side)) scale(var(--card-scale-side))`;
+        leftCard.style.boxShadow = '0 35px 120px 30px var(--back-card-shadow)';
+        leftCard.style.filter = 'brightness(0.6)';
+        leftCard.style.cursor = 'pointer';
+        leftCard.style.pointerEvents = 'auto';
+        setCardInteractive(leftCard, false);
+
+        // Right card
+        const rightCard = cards[rightIndex];
+        rightCard.classList.add('back-card');
+        rightCard.style.opacity = '0.7';
+        rightCard.style.zIndex = '20';
+        rightCard.style.transform = `translateX(calc(-50% + var(--card-spacing-x))) translateY(var(--card-spacing-y)) translateZ(var(--card-translate-z-side)) rotateY(calc(-1 * var(--card-rotate-y-side))) rotateX(var(--card-rotate-x-side)) scale(var(--card-scale-side))`;
+        rightCard.style.boxShadow = '0 35px 120px 30px var(--back-card-shadow)';
+        rightCard.style.filter = 'brightness(0.6)';
+        rightCard.style.cursor = 'pointer';
+        rightCard.style.pointerEvents = 'auto';
+        setCardInteractive(rightCard, false);
+      }
+
+      updateCardsPositions();
+
+      function moveLeft() {
+        if (isAnimating) return;
+        isAnimating = true;
+        currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+        updateCardsPositions();
+        setTimeout(() => {
+          isAnimating = false;
+        }, 650);
+      }
+
+      function moveRight() {
+        if (isAnimating) return;
+        isAnimating = true;
+        currentIndex = (currentIndex + 1) % cards.length;
+        updateCardsPositions();
+        setTimeout(() => {
+          isAnimating = false;
+        }, 650);
+      }
+
+      leftBtn.addEventListener('click', moveLeft);
+      rightBtn.addEventListener('click', moveRight);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') {
+          moveLeft();
+        } else if (e.key === 'ArrowRight') {
+          moveRight();
+        }
+      });
+
+      cards.forEach((card, index) => {
+        card.addEventListener('click', () => {
+          if (isAnimating) return;
+          if (index === currentIndex) return;
+          isAnimating = true;
+          currentIndex = index;
+          updateCardsPositions();
+          setTimeout(() => {
+            isAnimating = false;
+          }, 650);
+        });
+      });
+
+      // PCS Quick Search form handling (card2)
+      const pcsForm = document.getElementById('pcsForm');
+      const cpnInput = document.getElementById('cpnInput');
+      const pcsClearBtn = document.getElementById('pcsClearBtn');
+      const pcsError = document.getElementById('pcsError');
+
+const internalSummaryBtn = document.getElementById('internalSummaryBtn');
+
+internalSummaryBtn.addEventListener('click', () => {
+  pcsError.textContent = '';
+  const cpn = cpnInput.value.trim();
+  if (!cpn) {
+    pcsError.textContent = 'Cylinder Part Number is required.';
+    cpnInput.focus();
+    return;
+  }
+  const url = `https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/Reports/ConfigurationSummaryByCPNinternal?CPN=${encodeURIComponent(cpn)}`;
+  window.open(url, '_blank');
+});
+
+      pcsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        pcsError.textContent = '';
+        const cpn = cpnInput.value.trim();
+        if (!cpn) {
+          pcsError.textContent = 'Cylinder Part Number is required.';
+          cpnInput.focus();
+          return;
+        }
+        const url = `https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/UserConfiguration/UserPage?&cpn=${encodeURIComponent(cpn)}&sn=search`;
+        window.open(url, '_blank');
+      });
+
+      pcsClearBtn.addEventListener('click', () => {
+        pcsError.textContent = '';
+        cpnInput.value = '';
+        cpnInput.focus();
+      });
+
+      // First card form JS (card1)
+
+      const partNumberInput = document.getElementById('partNumber');
+      const revisionInput = document.getElementById('revision');
+      const docTypeSelect = document.getElementById('docType');
+      const errorMsg = document.getElementById('errorMsg');
+
+      const quickSearchBtn = document.getElementById('quickSearchBtn');
+      const fullDocBtn = document.getElementById('fullDocBtn');
+      const clearBtn = document.getElementById('clearBtn');
+
+      function encodeParams(partNumber, revision, docType) {
+        const encodedPartNumber = encodeURIComponent(partNumber);
+        const encodedRevision = encodeURIComponent(revision);
+        const encodedDocType = encodeURIComponent(docType);
+        return { encodedPartNumber, encodedRevision, encodedDocType };
+      }
+
+      quickSearchBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        doQuickSearch();
+      });
+
+      fullDocBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        doFullDocSearch();
+      });
+
+      clearBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        clearFields();
+      });
+
+function doQuickSearch() {
+  errorMsg.textContent = '';
+
+  let partNumber = partNumberInput.value.trim().toUpperCase();
+  let revision = revisionInput.value.trim().toUpperCase();
+
+  if (!partNumber) {
+    errorMsg.textContent = 'Part Number is required.';
+    partNumberInput.focus();
+    return;
+  }
+
+  if (!revision) {
+    revision = '@';
+  }
+
+  const encodedPartNumber = encodeURIComponent(partNumber);
+  const encodedRevision = encodeURIComponent(revision);
+  // fixed combined types string for all three types
+  const encodedDocType = encodeURIComponent("CAD Drawing,Change Controlled Document,Engineering Document,Accounting Document,General Document,Marketing Document,Quality Document");
+
+  const baseUrl = 'http://indplmsearch/enovia/ph_getParameterObjectsFile.jsp';
+  const url = `${baseUrl}?type=${encodedDocType}&name=${encodedPartNumber}&rev=${encodedRevision}`;
+
+  window.open(url, '_blank');
+}
+
+      function doFullDocSearch() {
+        errorMsg.textContent = '';
+
+        let partNumberRaw = partNumberInput.value.trim();
+        if (!partNumberRaw) {
+          errorMsg.textContent = 'Part Number is required.';
+          partNumberInput.focus();
+          return;
+        }
+
+        const encodedPartNumber = encodeURIComponent(`${partNumberRaw}`);
+        const url = `https://indplmshopfloorviewer/enoviadocsearch/Resultpage_Industrial_LightSearch.html?Title=${encodedPartNumber}&Description=&Type=All`;
+        window.open(url, '_blank');
+      }
+
+      function clearFields() {
+        partNumberInput.value = '';
+        revisionInput.value = '';
+        docTypeSelect.selectedIndex = 0;
+        errorMsg.textContent = '';
+        partNumberInput.focus();
+      }
+
+      // Card 3 Orders Log Quick Search form handling (using GET URL)
+      const ordersLogForm = document.getElementById('ordersLogForm');
+      const ordersSearchInput = document.getElementById('ordersSearchInput');
+      const ordersError = document.getElementById('ordersError');
+      const ordersClearBtn = document.getElementById('ordersClearBtn');
+
+      ordersLogForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        ordersError.textContent = '';
+        const searchTerm = ordersSearchInput.value.trim();
+        if (!searchTerm) {
+          ordersError.textContent = 'Search term is required.';
+          ordersSearchInput.focus();
+          return;
+        }
+        const url = `http://cylengineering/Home/IndexGgrid?SearchText=${encodeURIComponent(searchTerm)}&SearchCriteria=rbPartNumber`;
+        window.open(url, '_blank');
+      });
+
+      ordersClearBtn.addEventListener('click', () => {
+        ordersError.textContent = '';
+        ordersSearchInput.value = '';
+        ordersSearchInput.focus();
+      });
+    })();
+  </script>
+</body>
+</html>
