@@ -2,28 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fetch External Text</title>
+  <title>Load PDF</title>
 </head>
 <body>
-  <h1>Content from External URL</h1>
-  <pre id="output">Loading...</pre>
+  <h1>Load PDF via Fetch</h1>
+  <button id="loadPdf">Load PDF</button>
+  <br/><br/>
+  <iframe id="pdfFrame" width="100%" height="600px" style="border:none;"></iframe>
 
   <script>
-    const url = "https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/Reports/ConfigurationSummaryByCPNinternal?CPN=1H3H0A00345475";
-
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then(text => {
-        document.getElementById('output').textContent = text;
-      })
-      .catch(error => {
-        document.getElementById('output').textContent = 'Failed to load content: ' + error.message;
-      });
+    document.getElementById('loadPdf').addEventListener('click', () => {
+      fetch('https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/Reports/ConfigurationSummaryByCPNinternal?CPN=1H3H0A00345475')
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.blob();
+        })
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          document.getElementById('pdfFrame').src = url;
+        })
+        .catch(error => {
+          alert('Failed to load PDF: ' + error.message);
+        });
+    });
   </script>
 </body>
 </html>
