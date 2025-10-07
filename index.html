@@ -550,7 +550,7 @@ nav.quick-links-nav ul.dropdown-menu li a {
   <div>
     <button aria-haspopup="true" aria-expanded="false" aria-controls="pcs-menu" id="btn-pcs">PCS</button>
     <ul class="dropdown-menu" id="pcs-menu" role="menu" aria-labelledby="btn-pcs">
-      <li><a href="https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/StackIT/UserConfigurePart" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS</a></li>
+      <li><a href="https://phconnect.parker.com/CRM/Config/StackIT/Industrial%20Cylinder/StackIT/UserConfigurePart" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS</a></li>
       <li><a href="http://cyl01ad02:9090/Industrial%20Cylinder/StackIT/UserConfigurePart" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS 9090</a></li>
       <li><a href="http://cyl01ad02:9494/Industrial%20Cylinder/StackIT/EstimationParts" target="_blank" rel="noopener" role="menuitem" tabindex="-1">PCS 9494</a></li>
     </ul>
@@ -861,7 +861,7 @@ internalSummaryBtn.addEventListener('click', () => {
     cpnInput.focus();
     return;
   }
-  const url = `https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/Reports/ConfigurationSummaryByCPNinternal?CPN=${encodeURIComponent(cpn)}`;
+  const url = `https://phconnect.parker.com/CRM/Config/StackIT/Industrial%20Cylinder/Reports/ConfigurationSummaryByCPNinternal?CPN=${encodeURIComponent(cpn)}`;
   window.open(url, '_blank');
 });
 
@@ -874,7 +874,7 @@ internalSummaryBtn.addEventListener('click', () => {
           cpnInput.focus();
           return;
         }
-        const url = `https://phconnect.parker.corp/CRM/Config/StackIT/Industrial%20Cylinder/UserConfiguration/UserPage?&cpn=${encodeURIComponent(cpn)}&sn=search`;
+        const url = `https://phconnect.parker.com/CRM/Config/StackIT/Industrial%20Cylinder/UserConfiguration/UserPage?&cpn=${encodeURIComponent(cpn)}&sn=search`;
         window.open(url, '_blank');
       });
 
@@ -995,4 +995,5 @@ function doQuickSearch() {
   </script>
 </body>
 </html>
+
 
